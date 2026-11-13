@@ -1,0 +1,95 @@
+# Hey Wiki in-game verification — horizon-ctl script (one command per line).
+# Drive it against a client launched with --control (or via `horizon-ctl launch`),
+# inside the Xvfb recipe from the memory notes. The acceptance bar:
+#   1. H over a block (within reach) opens the mod's own screen with the wiki
+#      page's text, wrapped and scrollable; Esc goes back, Esc again closes;
+#   2. H over a mob opens the mob's page; H over air does nothing; beyond the
+#      reach setting nothing opens; a wall between the mob and the player
+#      makes the block's page win;
+#   3. Alt+H opens the main hand's item page anywhere; H with the survival
+#      inventory open opens the hovered slot's item page (hotbar, main,
+#      armor, off hand);
+#   4. B opens the search box; typing lands in it (backspace, arrows, home,
+#      end work; held keys repeat); Enter lists the wiki's ranked results,
+#      Up/Down pick, Enter/click opens the page; a nonsense query comes back
+#      to the box with the query kept;
+#   5. the page view's buttons: Open in browser shows the game's own
+#      open-or-copy dialog (with confirm-open on) and the browser opens the
+#      page; Copy link puts the page URL on the clipboard; Back returns to
+#      the search box; with confirm-open off the browser opens directly;
+#   6. with native-view OFF: H opens the game's own link confirmation for
+#      the search URL (Open / Copy link / Cancel) and the browser opens;
+#      B's Enter opens the browser at the search URL the same way;
+#   7. Options > Mods > Hey Wiki: the row carries the two keybinds (Open
+#      Wiki Page, Wiki Search); the settings page shows Enabled, Wiki in
+#      game, Confirm before opening, Reach; toggles take the next tick;
+#      Reach cycles 3.0/5.2/8.0/12.0 and H obeys it;
+#   8. the keys rebind (Options > Mods > Hey Wiki > keybind row) and the new
+#      keys work; the mod disabled silences everything;
+#   9. no fetch ever stalls the frame: while the page loads the screen says
+#      so and the world keeps running; a dead network comes back as the
+#      page view's failure note, with the buttons still working.
+# Deferred (the release-rebuild fence forbids launching the client): run this
+# whole script in a later session.
+# Assumptions to adjust per run: world name and the looked-at blocks.
+launch --world HeyWikiTest --seed 1 --wait
+state
+# stand facing a block within reach, then:
+look 0 20
+sleep 1
+screenshot hey-wiki-1-before
+# H: the block's page, fetched natively
+key h tap
+sleep 8
+screenshot hey-wiki-2-page
+state
+# scroll: the wheel moves the text
+mouse-move 0 0
+key down tap
+sleep 1
+screenshot hey-wiki-3-scrolled
+# Esc goes back to the box, Esc again closes
+key escape tap
+sleep 1
+screenshot hey-wiki-4-box
+key escape tap
+sleep 1
+state
+# B: the search box, typed into, Enter: the results
+key b tap
+sleep 1
+type diamond
+sleep 1
+screenshot hey-wiki-5-typed
+key enter tap
+sleep 8
+screenshot hey-wiki-6-results
+key down tap
+key enter tap
+sleep 8
+screenshot hey-wiki-7-result-page
+# the buttons: Copy link, then Open in browser (the game's own dialog)
+mouse left click <copy-button-center>
+sleep 1
+mouse left click <browser-button-center>
+sleep 2
+screenshot hey-wiki-8-link-prompt
+# Alt+H: the held item's page
+key leftalt down
+key h tap
+key leftalt up
+sleep 8
+screenshot hey-wiki-9-held-item
+key escape tap
+sleep 1
+key escape tap
+# inventory hover: open the survival inventory, hover a slot, H
+key e tap
+sleep 1
+mouse-move <slot dx> <slot dy>
+key h tap
+sleep 8
+screenshot hey-wiki-10-hovered
+key escape tap
+# settings: Options > Mods > Hey Wiki, the four rows and the keybinds
+screenshot hey-wiki-11-settings
