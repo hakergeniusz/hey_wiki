@@ -28,7 +28,15 @@
 #      keys work; the mod disabled silences everything;
 #   9. no fetch ever stalls the frame: while the page loads the screen says
 #      so and the world keeps running; a dead network comes back as the
-#      page view's failure note, with the buttons still working.
+#      page view's failure note, with the buttons still working;
+#  10. the browser round-trip leaves the pointer right: with confirm-open on,
+#      the open-or-copy dialog's three buttons answer the mouse (the pointer
+#      is free over the prompt, the view does not turn with the mouse); after
+#      Open opens the browser and the game window is focused again, the
+#      pointer is back within a tick (`state` says pointer_grabbed true,
+#      look turns the view) — same after Cancel, and with confirm-open off
+#      after the direct browser handoff, whatever the pause-on-lost-focus
+#      setting says.
 # Deferred (the release-rebuild fence forbids launching the client): run this
 # whole script in a later session.
 # Assumptions to adjust per run: world name and the looked-at blocks.
@@ -74,6 +82,18 @@ sleep 1
 mouse left click <browser-button-center>
 sleep 2
 screenshot hey-wiki-8-link-prompt
+state
+# the prompt answered with the mouse: the pointer is free over it and the
+# view does not turn with the mouse. Open it, let the browser take the
+# window's focus, then come back: the pointer re-grabs within a tick.
+mouse left click <prompt-open-button-center>
+sleep 3
+state
+# (switch back to the game window here: focus it and click it once)
+state
+key escape tap
+sleep 1
+state
 # Alt+H: the held item's page
 key leftalt down
 key h tap

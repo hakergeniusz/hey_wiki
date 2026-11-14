@@ -1,6 +1,6 @@
 [package]
 name = "horizon-hey-wiki"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 license = "MIT"
 description = "Hey Wiki: press H to open the Minecraft Wiki page of the block, mob or item you are looking at, Alt+H for the item in your hand, and B for an in-game wiki search box. A Horizon native mod."
