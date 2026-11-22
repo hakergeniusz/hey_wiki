@@ -1,7 +1,7 @@
 id = "hey_wiki"
 name = "Hey Wiki"
-version = "0.3.0"
-description = "The Minecraft Wiki, a keypress away: press H to open the page of what you look at, B for the wiki's own search screen — fetched into the game or opened in the browser."
+version = "0.3.1"
+description = "The Minecraft Wiki, a keypress away: press H to open the page of what you look at, K for the wiki's own search screen — fetched into the game or opened in the browser."
 authors = ["hakergeniusz"]
 license = "MIT"
 api = "0.2"
@@ -13,18 +13,19 @@ game = "26.3"
 horizon = "f037744a79f9982c47876f49c5a3067279f88706"
 mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
 
-# The wiki screen drawn whole once a frame (its id is `mod` and this mod
-# owns it): the workers' answers apply, then the box, the results, the wait
-# or the page with its buttons.
+# The wiki screen drawn whole once a frame (the game's own mod screen, and
+# this mod owns it): the workers' answers apply, then the box, the results,
+# the wait or the page with its buttons. The hook is the screen draw's own
+# frame post, which fires while any screen but Playing is up and carries no
+# screen view, so the screen and its panel rectangle are read off the game.
 [[native.mixin]]
 id = "screen"
-target = "horizon_client::game::native_hooks::base::Game<'_>::native_screen_render_post"
+target = "horizon_client::game::screen_backgrounds::Game<'_>::draw_screen_with_post_hook"
 kind = "HEAD"
 helper = "src/mixins/screen.rs"
 bindings = [
   { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
-  { name = "batch", ty = "&mut HudBatch", value = "draw" },
-  { name = "screen", ty = "&ScreenView<'_>", value = "screen" },
+  { name = "batch", ty = "&mut HudBatch", value = "batch" },
 ]
 
 # A key on the wiki screen, before the screen acts: the mode's answer, a

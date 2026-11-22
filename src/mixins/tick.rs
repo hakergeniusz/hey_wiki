@@ -1,5 +1,5 @@
 // Every tick: the mod's three keys poll here through their registered
-// mappings — B opens the wiki screen, H looks up what the crosshair is on
+// mappings — K opens the wiki screen, H looks up what the crosshair is on
 // (the hovered slot's item while a screen is open), Alt+H the main hand's
 // item — and the screen helper's deferrals happen where the &mut game is: a
 // link for the clipboard, or a browser opening (the search box's Enter with
@@ -144,7 +144,7 @@ fn hey_wiki_tick(game: &mut crate::game::Game<'_>) {
         }
     }
 
-    // The keys first: B opens the wiki screen, H looks the target up,
+    // The keys first: K opens the wiki screen, H looks the target up,
     // Alt+H the held item — each a registered mapping the tick polls.
     let enabled = wiki::setting_on(wiki::file_setting);
     let on_mod = game.native_mod_screen.as_deref() == Some(wiki::ID);

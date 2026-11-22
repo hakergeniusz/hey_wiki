@@ -2030,7 +2030,7 @@ pub struct Mod;
 #[mod_api::horizon_mod]
 impl Hooks for Mod {
     /// The page's three toggles and its Reach step, and the three keys the
-    /// tick's helper polls: B opens the wiki screen, H looks up the
+    /// tick's helper polls: K opens the wiki screen, H looks up the
     /// crosshair's target, Alt+H the main hand's item.
     fn register(
         &self,
@@ -2065,7 +2065,9 @@ impl Hooks for Mod {
             1,
         ));
         registrar.register_key_mapping(
-            KeyRegistration::new(OPEN_KEYBIND, "key.keyboard.b")
+            // K, not B: B is the game's emote wheel's own key, which won the
+            // press before the wiki screen ever opened.
+            KeyRegistration::new(OPEN_KEYBIND, "key.keyboard.k")
                 .label("hey_wiki.key.open")
                 .category("hey_wiki.category")
                 .context(KeyConflictContext::Universal),

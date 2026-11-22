@@ -6,14 +6,15 @@
 // engine's own flat fills only: one dark surface, one accent, hairline
 // separators, no gradients, no borders but the hairlines. The results' rows
 // and the buttons keep the geometry the click plan answers. Any worker's
-// answer that landed since the last frame applies first.
+// answer that landed since the last frame applies first. The hook is the
+// screen draw's own frame post, which fires while any screen but Playing
+// is up and carries no screen view, so the screen and its panel rectangle
+// are read off the game.
 // Copyright (c) 2026 hakergeniusz. MIT.
-fn hey_wiki_screen(
-    game: &crate::game::Game<'_>,
-    batch: &mut HudBatch,
-    screen: &ScreenView<'_>,
-) {
-        if screen.id != "mod" || game.native_mod_screen.as_deref() != Some(wiki::ID) {
+fn hey_wiki_screen(game: &crate::game::Game<'_>, batch: &mut HudBatch) {
+    if game.screen != crate::game::Screen::Mod
+        || game.native_mod_screen.as_deref() != Some(wiki::ID)
+    {
         return;
     }
     if !wiki::setting_on(wiki::file_setting) {
@@ -23,7 +24,10 @@ fn hey_wiki_screen(
     if let Some(outcome) = wiki::take_outcome() {
         wiki::with_viewer(|viewer| viewer.apply(outcome));
     }
-    let (w, h) = (screen.rect[2], screen.rect[3]);
+    // The mod screen's own rectangle: the whole window, as the screen view
+    // the hooks see would report it.
+    let rect = game.screen_rect(batch, game.screen);
+    let (w, h) = (rect[2], rect[3]);
     let panel = [
         (w - wiki::PANEL_W) / 2.0,
         (h - wiki::PANEL_H) / 2.0,

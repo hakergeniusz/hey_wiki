@@ -7,14 +7,14 @@ A [Horizon](https://github.com/horizon-rust/horizon) native mod (`.hnmod`) that 
   targets (within the configurable reach), or — while a screen is open — the item under the
   cursor in the plain survival inventory.
 - **Alt+H** — the wiki page of the item in your main hand.
-- **B** — an in-game wiki search screen: type, Enter, and the results are listed to open.
+- **K** — an in-game wiki search screen: type, Enter, and the results are listed to open.
 
 The pages render **in the game** (a native screen: title, wrapped text, wheel/arrow
 scrolling), fetched with the engine's own HTTP client on a worker thread. The browser stays
 as the fallback: every page view offers **Open in browser** and **Copy link**, and with the
 `native-view` setting off the mod falls back to the original's browser flow entirely — the
 game's own open-or-copy link confirmation (Open / Copy link / Cancel) before any browser
-opens. H and B rebind in Options > Mods, like any mod's keybinds.
+opens. H and K rebind in Options > Mods, like any mod's keybinds.
 
 Settings (Options > Mods > Hey Wiki): `enabled`, `native-view` (wiki in game, default on),
 `confirm-open` (confirm before a browser opens, default on), `reach` (the crosshair's
