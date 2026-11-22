@@ -10,14 +10,13 @@
 // Copyright (c) 2026 hakergeniusz. MIT.
 fn hey_wiki_screen(
     game: &crate::game::Game<'_>,
-    batch: &mut horizon_client::hud::HudBatch,
-    screen: &horizon_client::mod_api::NativeScreenView<'_>,
+    batch: &mut HudBatch,
+    screen: &ScreenView<'_>,
 ) {
-    use crate::game::hey_wiki as wiki;
-    if screen.id != "mod" || game.native_mod_screen() != Some(wiki::ID) {
+        if screen.id != "mod" || game.native_mod_screen.as_deref() != Some(wiki::ID) {
         return;
     }
-    if !game.native_on(wiki::ID) || !game.native_window() {
+    if !wiki::setting_on(wiki::file_setting) {
         return;
     }
     // The workers' answers land here, between frames.

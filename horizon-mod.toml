@@ -1,0 +1,114 @@
+id = "hey_wiki"
+name = "Hey Wiki"
+version = "0.3.0"
+description = "The Minecraft Wiki, a keypress away: press H to open the page of what you look at, B for the wiki's own search screen — fetched into the game or opened in the browser."
+authors = ["hakergeniusz"]
+license = "MIT"
+api = "0.2"
+side = "client"
+capabilities = ["registries"]
+
+[native]
+game = "26.3"
+horizon = "f037744a79f9982c47876f49c5a3067279f88706"
+mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
+
+# The wiki screen drawn whole once a frame (its id is `mod` and this mod
+# owns it): the workers' answers apply, then the box, the results, the wait
+# or the page with its buttons.
+[[native.mixin]]
+id = "screen"
+target = "horizon_client::game::native_hooks::base::Game<'_>::native_screen_render_post"
+kind = "HEAD"
+helper = "src/mixins/screen.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "batch", ty = "&mut HudBatch", value = "draw" },
+  { name = "screen", ty = "&ScreenView<'_>", value = "screen" },
+]
+
+# A key on the wiki screen, before the screen acts: the mode's answer, a
+# submit fetching natively or opening the browser, Escape going on.
+[[native.mixin]]
+id = "screen-key"
+target = "horizon_client::game::native_hooks::base::Game<'_>::native_screen_key_pressed_pre"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/screen_key.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "screen", ty = "&ScreenView<'_>", value = "screen" },
+  { name = "key", ty = "&str", value = "key" },
+  { name = "repeat", ty = "bool", value = "repeat" },
+  { name = "modifiers", ty = "u32", value = "modifiers" },
+]
+
+# A typed character on the wiki screen: the search box takes it, the rest
+# of the screen drops it, nothing types through into the game.
+[[native.mixin]]
+id = "screen-char"
+target = "horizon_client::game::native_hooks::base::Game<'_>::native_screen_char_typed_pre"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/screen_char.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "screen", ty = "&ScreenView<'_>", value = "screen" },
+  { name = "c", ty = "char", value = "c" },
+  { name = "modifiers", ty = "u32", value = "modifiers" },
+]
+
+# A press on the wiki screen: the page's buttons (browser fallback, link
+# copy, back) and a result's row, per the brain's click plan.
+[[native.mixin]]
+id = "screen-click"
+target = "horizon_client::game::native_hooks::base::Game<'_>::native_screen_mouse_button_pressed_pre"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/click.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "screen", ty = "&ScreenView<'_>", value = "screen" },
+  { name = "button", ty = "i32", value = "button" },
+  { name = "modifiers", ty = "u32", value = "modifiers" },
+]
+
+# The wheel over the wiki screen: the page's text scrolls three lines a
+# notch, clamped to the text.
+[[native.mixin]]
+id = "screen-scroll"
+target = "horizon_client::game::native_hooks::base::Game<'_>::native_screen_mouse_scrolled_pre"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/scroll.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "screen", ty = "&ScreenView<'_>", value = "screen" },
+  { name = "scroll", ty = "[f64; 2]", value = "scroll" },
+  { name = "modifiers", ty = "u32", value = "modifiers" },
+]
+
+# A mod's own screen closing: the view and the deferred browser are
+# forgotten.
+[[native.mixin]]
+id = "closed"
+target = "horizon_client::game::native_hooks::screen_closing::Game<'_>::native_screen_closing"
+kind = "HEAD"
+helper = "src/mixins/close.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "screen", ty = "&ScreenView<'_>", value = "screen" },
+]
+
+# Every tick: the three keys poll through their registered mappings, then
+# the deferred browser opening (the native view off, or the page view's
+# button) goes to the game's link prompt or the browser. The client_tick_pre
+# hook itself is implemented in src/lib.rs so this dispatch always runs.
+[[native.mixin]]
+id = "tick"
+target = "horizon_client::game::native_hooks::client_tick_pre::Game<'_>::native_client_tick_pre"
+kind = "HEAD"
+helper = "src/mixins/tick.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+]

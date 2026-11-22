@@ -20,9 +20,12 @@
 
 /// The mod's registry id: the settings folder, the Options > Mods row and
 /// the owner of the mod's own screen (the wiki's viewer).
+use mod_api::Hooks;
+
+/// The mod's registry id: the settings folder and the Options > Mods row.
 pub const ID: &str = "hey_wiki";
 /// The version the row shows.
-pub const VERSION: &str = "0.2.0";
+pub const VERSION: &str = "0.3.0";
 /// The mod's description for its row.
 pub const DESCRIPTION: &str = "The Minecraft Wiki, a keypress away: press H to open the \
 page of the block, mob or item your crosshair is on (the hovered slot's item \
@@ -135,9 +138,20 @@ pub fn confirm_open(get: impl FnOnce(&str) -> Option<String>) -> bool {
 /// missing or unreadable file is the default; anything outside 1..=32 is
 /// clamped, so a stray edit cannot make the ray run to the horizon.
 pub fn reach_of(get: impl FnOnce(&str) -> Option<String>) -> f32 {
-    get(SETTING_REACH)
-        .and_then(|v| v.trim().parse::<f32>().ok())
-        .map_or(DEFAULT_REACH, |r| r.clamp(1.0, 32.0))
+    match get(SETTING_REACH).map(|v| v.trim().to_owned()) {
+        // The choice's own store: the picked preset's index.
+        Some(idx) if idx
+            .parse::<usize>()
+            .ok()
+            .and_then(|i| REACH_STEPS.get(i))
+            .is_some() =>
+        {
+            REACH_STEPS[idx.parse::<usize>().unwrap()]
+        }
+        // A float from before the presets, kept working.
+        Some(v) => v.parse::<f32>().ok().map_or(DEFAULT_REACH, |r| r.clamp(1.0, 32.0)),
+        None => DEFAULT_REACH,
+    }
 }
 
 /// What to write for a reach: one decimal place, the way the page shows it.
@@ -1990,5 +2004,90 @@ mod tests {
                 _ => None,
             }
         }
+    }
+}
+
+/// The mod's data folder: `<the client's working directory>/horizon-mods/
+/// .horizon-mod-data/hey_wiki/` — the same folder the settings store keeps
+/// the mod's toggles in, wherever the game runs.
+pub fn data_dir() -> std::path::PathBuf {
+    std::env::current_dir()
+        .unwrap_or_default()
+        .join("horizon-mods")
+        .join(".horizon-mod-data")
+        .join(ID)
+}
+
+/// A setting file's text, as the settings store keeps it: one file per key,
+/// "true"/"false" for toggles.
+pub fn file_setting(key: &str) -> Option<String> {
+    std::fs::read_to_string(data_dir().join(key)).ok()
+}
+
+#[derive(Default)]
+pub struct Mod;
+
+#[mod_api::horizon_mod]
+impl Hooks for Mod {
+    /// The page's three toggles and its Reach step, and the three keys the
+    /// tick's helper polls: B opens the wiki screen, H looks up the
+    /// crosshair's target, Alt+H the main hand's item.
+    fn register(
+        &self,
+        registrar: &mut dyn mod_api::Registrar,
+        _: &mod_api::RegistrationContext,
+    ) {
+        use mod_api::{KeyConflictContext, KeyRegistration, SettingSpec};
+        let _ = registrar.register_setting(SettingSpec::toggle(
+            SETTING_ENABLED,
+            "hey_wiki.setting.enabled",
+            true,
+        ));
+        let _ = registrar.register_setting(SettingSpec::toggle(
+            SETTING_NATIVE,
+            "hey_wiki.setting.native_view",
+            true,
+        ));
+        let _ = registrar.register_setting(SettingSpec::toggle(
+            SETTING_CONFIRM,
+            "hey_wiki.setting.confirm_open",
+            true,
+        ));
+        let _ = registrar.register_setting(SettingSpec::choice(
+            SETTING_REACH,
+            "hey_wiki.setting.reach",
+            [
+                "hey_wiki.reach.3",
+                "hey_wiki.reach.5_2",
+                "hey_wiki.reach.8",
+                "hey_wiki.reach.12",
+            ],
+            1,
+        ));
+        registrar.register_key_mapping(
+            KeyRegistration::new(OPEN_KEYBIND, "key.keyboard.b")
+                .label("hey_wiki.key.open")
+                .category("hey_wiki.category")
+                .context(KeyConflictContext::Universal),
+        );
+        registrar.register_key_mapping(
+            KeyRegistration::new(SEARCH_KEYBIND, "key.keyboard.h")
+                .label("hey_wiki.key.search")
+                .category("hey_wiki.category")
+                .context(KeyConflictContext::Universal),
+        );
+        registrar.register_key_mapping(
+            KeyRegistration::new("held", "key.keyboard.h")
+                .label("hey_wiki.key.held")
+                .category("hey_wiki.category")
+                .context(KeyConflictContext::Universal)
+                .modifiers(mod_api::ClientModifiers::new(4)),
+        );
+    }
+
+    /// Implemented as a no-op so the game always calls the
+    /// `native_client_tick_pre` dispatch the tick mixin lives in: the game
+    /// skips dispatches no mod listens to, and the mixin must run.
+    fn client_tick_pre(&self, _: &mut dyn mod_api::ClientHost, _: &mut mod_api::ClientTickPreEvent) {
     }
 }

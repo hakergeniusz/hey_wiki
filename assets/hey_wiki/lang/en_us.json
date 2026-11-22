@@ -1,0 +1,14 @@
+{
+  "hey_wiki.setting.enabled": "Enabled",
+  "hey_wiki.setting.native_view": "Wiki in game",
+  "hey_wiki.setting.confirm_open": "Confirm before opening",
+  "hey_wiki.setting.reach": "Lookup reach",
+  "hey_wiki.reach.3": "3 blocks",
+  "hey_wiki.reach.5_2": "5.2 blocks",
+  "hey_wiki.reach.8": "8 blocks",
+  "hey_wiki.reach.12": "12 blocks",
+  "hey_wiki.key.open": "Open the wiki",
+  "hey_wiki.key.search": "Look up the target",
+  "hey_wiki.key.held": "Look up the held item",
+  "hey_wiki.category": "Hey Wiki"
+}

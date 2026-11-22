@@ -5,10 +5,9 @@
 // Copyright (c) 2026 hakergeniusz. MIT.
 fn hey_wiki_closed(
     game: &crate::game::Game<'_>,
-    screen: &horizon_client::mod_api::NativeScreenView<'_>,
+    screen: &ScreenView<'_>,
 ) {
-    use crate::game::hey_wiki as wiki;
-    if screen.id != "mod" || !game.native_on(wiki::ID) {
+        if screen.id != "mod" {
         return;
     }
     wiki::reset_screen();

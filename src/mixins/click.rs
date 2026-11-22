@@ -6,16 +6,32 @@
 // Copyright (c) 2026 hakergeniusz. MIT.
 fn hey_wiki_screen_click(
     game: &crate::game::Game<'_>,
-    screen: &horizon_client::mod_api::NativeScreenView<'_>,
+    screen: &ScreenView<'_>,
     button: i32,
     modifiers: u32,
 ) -> core::ops::ControlFlow<()> {
-    use crate::game::hey_wiki as wiki;
+    // The HTTP the workers run: the engine's own client, ten seconds to
+    // answer, the body or nothing (any failure is the same nothing to the
+    // fetch).
+    fn http(url: &str) -> Option<String> {
+        let response = ureq::get(url).timeout(std::time::Duration::from_secs(10)).call();
+        response.ok().and_then(|answer| answer.into_string().ok())
+    }
+    /// A wiki page, fetched natively: the view starts waiting and the
+    /// worker's answer fills it in when it lands.
+    fn fetch_page(title: &str) {
+        let Some(url) = wiki::api_extract_url(title) else {
+            return;
+        };
+        wiki::with_viewer(|viewer| viewer.start(wiki::FetchKind::Page, title));
+        wiki::fetch_async(wiki::FetchKind::Page, title.to_string(), url, http);
+    }
+
     let _ = modifiers;
-    if screen.id != "mod" || game.native_mod_screen() != Some(wiki::ID) {
+    if screen.id != "mod" || game.native_mod_screen.as_deref() != Some(wiki::ID) {
         return core::ops::ControlFlow::Continue(());
     }
-    if !game.native_on(wiki::ID) || button != 0 || game.link_prompt.is_some() {
+    if !wiki::setting_on(wiki::file_setting) || button != 0 || game.link_prompt.is_some() {
         // Not the mouse's left button, or the engine's own open-or-copy
         // dialog owns this click.
         return core::ops::ControlFlow::Continue(());
@@ -53,7 +69,7 @@ fn hey_wiki_screen_click(
         wiki::ClickPlan::Result(index) => {
             let title = wiki::with_viewer(|viewer| viewer.result_title(index));
             if let Some(title) = title {
-                crate::game::hey_wiki_hooks::fetch_page(&title);
+                fetch_page(&title);
             }
             core::ops::ControlFlow::Break(())
         }
